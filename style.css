@@ -1,15 +1,21 @@
-async function loadStatus() {
-  try {
-    const res = await fetch('status.json?cacheBust=' + Date.now());
-    const data = await res.json();
-    document.getElementById('status').innerHTML =
-      `<p>Size ${data.target_size}: <strong>${data.status}</strong></p>
-       <p>Last check: ${data.last_check}</p>`;
-  } catch (e) {
-    document.getElementById('status').innerText = 'Error loading status';
-  }
+body {
+  font-family: sans-serif;
+  margin: 2em;
+  background: #f9f9f9;
 }
 
-// Load immediately and refresh every 60s
-loadStatus();
-setInterval(loadStatus, 60000);
+h1 {
+  color: #333;
+}
+
+#status {
+  padding: 1em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background: #fff;
+  max-width: 400px;
+}
+
+strong {
+  color: green;
+}
