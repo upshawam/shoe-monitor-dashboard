@@ -37,7 +37,7 @@ jobs:
           fi
       
       - name: Create GitHub Issue for new products
-        if: steps.read-cache.outputs.new_count > 0
+        if: ${{ steps.tracker.outcome == 'success' }}
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
