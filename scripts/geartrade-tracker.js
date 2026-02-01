@@ -14,10 +14,19 @@ async function fetchProducts() {
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
         try {
-          // Extract product IDs from the page
-          const productMatches = data.match(/data-product-id="(\d+)"/g) || [];
-          const products = productMatches.map(m => m.match(/\d+/)[0]);
-          resolve([...new Set(products)]); // Remove duplicates
+          // Extract product URLs from the page
+          // Looking for: href="/products/tx-hike-mid-gtx-hiking-boot-mens-carbonsaffron-465-goo-1597051"
+          const productMatches = data.match(/href="(\/products\/[^"]+)"/g) || [];
+          const products = productMatches
+            .map(m => {
+              const match = m.match(/href="(\/products\/[^"]+)"/);
+              return match ? match[1] : null;
+            })
+            .filter(p => p !== null);
+          
+          const uniqueProducts = [...new Set(products)]; // Remove duplicates
+          console.log('Extracted products:', uniqueProducts);
+          resolve(uniqueProducts);
         } catch (e) {
           reject(e);
         }

@@ -46,15 +46,20 @@ jobs:
             const cache = JSON.parse(fs.readFileSync('.geartrade-cache.json', 'utf8'));
             
             const newCount = cache.newProducts.length;
-            const productIds = cache.newProducts.join(', ');
             const totalCount = cache.products.length;
             const timestamp = new Date().toLocaleString();
             
+            let productLinks = '';
+            cache.newProducts.forEach((productUrl, index) => {
+              const productName = productUrl.split('/').pop().replace(/-/g, ' ').replace(/goo \d+$/, '').trim();
+              productLinks += (index + 1) + '. [' + productName + '](https://geartrade.com' + productUrl + ')\n';
+            });
+            
             const body = '🎉 **New La Sportiva shoes found in size 46.5 on Geartrade!**\n\n' +
-              '**New Products:** ' + newCount + '\n' +
-              '**Product IDs:** ' + productIds + '\n' +
+              '**New Products:** ' + newCount + '\n\n' +
+              productLinks + '\n' +
               '**Total Available:** ' + totalCount + '\n\n' +
-              '[View on Geartrade →](https://geartrade.com/search?q=la+sportiva&type=article%2Cpage%2Cproduct&options%5Bprefix%5D=last&sort_by=relevance&filter.v.option.size=46.5)\n\n' +
+              '[View all results →](https://geartrade.com/search?q=la+sportiva&type=article%2Cpage%2Cproduct&options%5Bprefix%5D=last&sort_by=relevance&filter.v.option.size=46.5)\n\n' +
               'Last checked: ' + timestamp;
             
             await github.rest.issues.create({
