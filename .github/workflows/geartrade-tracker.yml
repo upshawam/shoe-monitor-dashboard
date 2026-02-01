@@ -1,0 +1,76 @@
+name: Check Geartrade for New La Sportiva Shoes
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  check-products:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Run Geartrade tracker
+        id: tracker
+        run: |
+          node scripts/geartrade-tracker.js
+        continue-on-error: true
+      
+      - name: Read cache for new products
+        if: steps.tracker.outcome == 'success'
+        id: read-cache
+        run: |
+          if [ -f .geartrade-cache.json ]; then
+            NEW_PRODUCTS=$(jq -r '.newProducts | length' .geartrade-cache.json)
+            PRODUCT_IDS=$(jq -r '.newProducts | join(", ")' .geartrade-cache.json)
+            echo "new_count=$NEW_PRODUCTS" >> $GITHUB_OUTPUT
+            echo "product_ids=$PRODUCT_IDS" >> $GITHUB_OUTPUT
+            echo "Products found: $NEW_PRODUCTS new items"
+          fi
+      
+      - name: Create GitHub Issue for new products
+        if: steps.read-cache.outputs.new_count > 0
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const cache = JSON.parse(fs.readFileSync('.geartrade-cache.json', 'utf8'));
+            
+            const body = `🎉 **New La Sportiva shoes found in size 46.5 on Geartrade!**
+            
+**New Products:** ${cache.newProducts.length}
+**Product IDs:** ${cache.newProducts.join(', ')}
+**Total Available:** ${cache.products.length}
+
+[View on Geartrade →](https://geartrade.com/search?q=la+sportiva&type=article%2Cpage%2Cproduct&options%5Bprefix%5D=last&sort_by=relevance&filter.v.option.size=46.5)
+
+Last checked: ${new Date().toLocaleString()}
+            `;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 New La Sportiva 46.5 shoes available on Geartrade`,
+              body: body,
+              labels: ['geartrade', 'la-sportiva', 'alert']
+            });
+      
+      - name: Commit tracker updates
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add trackers.json .geartrade-cache.json
+          git commit -m "Update tracker status - $(date)" || true
+      
+      - name: Push changes
+        run: |
+          git push origin main || git push origin master || true

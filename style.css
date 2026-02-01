@@ -19,3 +19,36 @@ h1 {
 strong {
   color: green;
 }
+.trackers-container {
+  display: grid;
+  gap: 1.5em;
+  margin-top: 2em;
+}
+
+.tracker-card {
+  padding: 1.5em;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tracker-card h2 {
+  margin-top: 0;
+  font-size: 1.2em;
+  color: #333;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 0.5em;
+}
+
+.tracker-status {
+  margin: 0.5em 0;
+}
+
+.tracker-status.in-stock {
+  color: #28a745;
+}
+
+.tracker-status.out-of-stock {
+  color: #dc3545;
+}

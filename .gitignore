@@ -1,2 +1,4 @@
 push.log
 push_status.sh
+node_modules/
+.DS_Store
