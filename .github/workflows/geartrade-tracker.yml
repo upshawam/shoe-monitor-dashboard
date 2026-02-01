@@ -1,5 +1,9 @@
 name: Check Geartrade for New La Sportiva Shoes
 
+permissions:
+  issues: write
+  contents: write
+
 on:
   schedule:
     # Run every 6 hours
