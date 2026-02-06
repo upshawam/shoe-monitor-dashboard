@@ -18,6 +18,15 @@ Monitors Geartrade for new La Sportiva shoes in size 46.5.
 
 **Check Frequency:** Every 6 hours
 
+### Adidas Adizero Adios Pro (Size 8.5)
+Monitors Adidas for Adizero Adios Pro shoes in size 8.5.
+
+**Link:** https://www.adidas.com/us/men-adizero-adizero_adios_pro-running-shoes-sale?v_size_en_us=m_8.5___w_9.5%7C8.5%7C851_8%7C853_8%7C855_8%7C853_4%7C857_8%7C851_4%7C851_2
+
+**Check Frequency:** Every 6 hours
+
+**Note:** Adidas blocks simple HTTP requests (HTTP 403/WAF). The tracker uses Playwright (headless browser) for a more reliable fetch. If you still get `BLOCKED`, try running the tracker locally or save the page HTML from a browser and run with `ADIDAS_HTML_FILE`.
+
 ## How It Works
 
 1. **GitHub Action Workflow** runs on a schedule (`.github/workflows/geartrade-tracker.yml`)
@@ -38,6 +47,8 @@ Monitors Geartrade for new La Sportiva shoes in size 46.5.
 - `.geartrade-cache.json` - Cache of last known products
 - `scripts/geartrade-tracker.js` - Geartrade monitoring script
 - `.github/workflows/geartrade-tracker.yml` - Automated check workflow
+- `.github/workflows/adidas-tracker.yml` - Automated Adidas check workflow
+- `scripts/adidas-tracker.js` - Adidas monitoring script
 
 ## Setup
 

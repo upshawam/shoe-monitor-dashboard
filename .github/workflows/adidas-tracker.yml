@@ -1,0 +1,90 @@
+name: Check Adidas Adizero Adios Pro 8.5
+
+permissions:
+  issues: write
+  contents: write
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  check-products:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+
+      - name: Run Adidas tracker
+        id: tracker
+        run: |
+          node scripts/adidas-tracker.js
+        continue-on-error: true
+
+      - name: Read cache for new products
+        if: steps.tracker.outcome == 'success'
+        id: read-cache
+        run: |
+          if [ -f .adidas-cache.json ]; then
+            NEW_PRODUCTS=$(jq -r '.newProducts | length' .adidas-cache.json)
+            PRODUCT_IDS=$(jq -r '.newProducts | join(", ")' .adidas-cache.json)
+            echo "new_count=$NEW_PRODUCTS" >> $GITHUB_OUTPUT
+            echo "product_ids=$PRODUCT_IDS" >> $GITHUB_OUTPUT
+            echo "Products found: $NEW_PRODUCTS new items"
+          fi
+
+      - name: Create GitHub Issue for new products
+        if: steps.tracker.outcome == 'success'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const cache = JSON.parse(fs.readFileSync('.adidas-cache.json', 'utf8'));
+
+            const newCount = cache.newProducts.length;
+            const totalCount = cache.products.length;
+            const timestamp = new Date().toLocaleString();
+
+            let productLinks = '';
+            cache.newProducts.forEach((productUrl, index) => {
+              const productName = productUrl.split('/').pop().replace(/-/g, ' ').replace(/\.html$/, '').trim();
+              productLinks += (index + 1) + '. [' + productName + '](' + productUrl + ')\n';
+            });
+
+            const body = '🎉 **Adidas Adizero Adios Pro (size 8.5) found!**\n\n' +
+              '**New Products:** ' + newCount + '\n\n' +
+              productLinks + '\n' +
+              '**Total Available:** ' + totalCount + '\n\n' +
+              '[View all results →](https://www.adidas.com/us/men-adizero-adizero_adios_pro-running-shoes-sale?v_size_en_us=m_8.5___w_9.5%7C8.5%7C851_8%7C853_8%7C855_8%7C853_4%7C857_8%7C851_4%7C851_2)\n\n' +
+              'Last checked: ' + timestamp;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Adidas Adizero Adios Pro 8.5 available',
+              body: body,
+              labels: ['adidas', 'adizero', 'alert']
+            });
+
+      - name: Commit tracker updates
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add trackers.json .adidas-cache.json
+          git commit -m "Update adidas tracker status - $(date)" || true
+
+      - name: Push changes
+        run: |
+          git push origin main || git push origin master || true
